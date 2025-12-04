@@ -17,21 +17,33 @@ def generate_sentiment_response(sentiment_label: str, user_text: str) -> str:
 The user just said: "{user_text}"
 The sentiment detected is: {sentiment_label.upper()}
 
-Generate a brief, natural response (1-2 sentences) that:
-- Acknowledges their message
+Generate a complete, natural response (2-3 sentences) that:
+- Acknowledges their message with empathy
 - Matches their emotional tone
-- Offers help or encouragement
+- Offers specific help or encouragement
+- Sounds professional and complete
+
+IMPORTANT: Generate a COMPLETE response, not a partial one.
 
 Response:"""
         
         response = groq.client.chat.completions.create(
             model=groq.model,
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=100,
-            temperature=0.7
+            max_tokens=400,
+            temperature=0.6,
+            stop=None
         )
         
-        return response.choices[0].message.content.strip()
+        reply = response.choices[0].message.content.strip()
+        
+        # Ensure the response ends properly
+        if reply and not reply[-1] in '.!?':
+            # If incomplete, add a period
+            if len(reply.split()) > 5:
+                reply = reply.rsplit(' ', 1)[0] + '.'
+        
+        return reply if reply else "I understand. How can I assist you better?"
     except Exception as e:
         print(f"Groq response generation failed: {e}")
         return "I understand. How can I assist you?"
